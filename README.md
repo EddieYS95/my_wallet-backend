@@ -71,3 +71,49 @@ response : {
     "to": "입금받은 지갑의 주소"
 }
 ```
+
+### PACKAGE 구조
+
+```
+   backend
+   ├──api
+   │   ├── transaction
+   │   ├── wallet
+   ├──domain
+   │   ├── transaction
+   │   ├── wallet
+   ├──exception
+   ├──infra
+   │   ├── blockchain
+   │   ├── ctypto
+   ├──observer
+```
+
+#### API
+
+api패키지는 MVC패턴에 맞게 설계되어 있습니다. 실제 사용자가 호출하게 될 4가지의 API 명세가 구현되어 있으며 도메인을 기준으로 하위 패키지가 구성했습니다.   
+도메인은 사용자의 지갑을 의미하는 wallet과 실제 입출금이 일어나고 내역을 조회 가능한 transaction으로 이루어져 있습니다.
+
+#### Domain
+
+각 도메인을 구성하는 데이터 모델(Entity, Repository)를 포함하고 있습니다. JPA를 기반으로 생성되어 각 Entity객체와 PostgreSQL의 테이블이
+대응됩니다.  
+API와 마찬가지로 도메인을 기준으로 서브 패키지가 구성됩니다.
+
+#### Exception
+
+API의 생명주기에서 Runtime Exception을 처리해주는 패키지입니다. 에러코드에 따라 500(Internal Server Error) 또는 404(Not Found
+Error)를 클라이언트에 전송합니다.
+
+```json
+{
+  "errorCode": "에러 코드 번호",
+  "errorMsg": "에러 메세지",
+  "payload": "에러에 따른 추가 정보"
+}
+```
+
+#### Observer
+
+테스트넷과 실시간으로 연결하여 입출금 트랜잭션을 구독하고 Service를 이용해 데이터 처리를 관리합니다. API 패키지의 Service를 이용하며 구독 실행 및 해당 정보에 대한
+Controller역할을 수행합니다.
