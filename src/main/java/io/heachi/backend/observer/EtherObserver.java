@@ -36,8 +36,6 @@ public class EtherObserver {
   }
 
   private void startObserver() {
-    transactionService.subscribeBlock();
-
     ethereum.subscribeBlock(block -> {
       log.info("block number {}", block.getBlock().getNumber());
       block.getBlock().getTransactions().stream()
