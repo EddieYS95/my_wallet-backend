@@ -41,6 +41,10 @@ public class TransactionService {
       throw new LogicException(LogicErrorList.Invalid_Password);
     }
 
+    if (wallet.getBalance().compareTo(createDto.getEth()) < 0) {
+      throw new LogicException(LogicErrorList.NotEnough_Balance);
+    }
+
     String transactionHash = ethereum.transfer(wallet.getAddress(), privateKey,
         createDto.getToAddress(),
         createDto.getEth());
@@ -59,27 +63,6 @@ public class TransactionService {
     transactionRepo.save(transaction);
 
     return Response.<String>ok().body("Transaction Created");
-  }
-
-  public void add(org.web3j.protocol.core.methods.response.Transaction web3Transaction) {
-    Wallet wallet = walletRepo.findByAddress(web3Transaction.getTo()).orElse(null);
-    if (wallet == null) {
-      return;
-    }
-
-    Transaction transaction = transactionRepo.findByHash(web3Transaction.getHash())
-        .orElse(null);
-    if (transaction != null) {
-      return;
-    }
-
-    transaction = Transaction.builder()
-        .hash(web3Transaction.getHash())
-        .fromAddress(web3Transaction.getFrom())
-        .toAddress(web3Transaction.getTo())
-        .value(Convert.fromWei(web3Transaction.getValueRaw(), Unit.ETHER))
-        .build();
-    transactionRepo.save(transaction);
   }
 
   public void mined(org.web3j.protocol.core.methods.response.Transaction web3Transaction) {
@@ -104,8 +87,6 @@ public class TransactionService {
     }
 
     BigInteger minedBlockNumber = web3Transaction.getBlockNumber();
-
-    log.info("mined {}, {}, {}", transaction.getHash(), minedBlockNumber, usedGasPrice);
 
     transaction.mined(minedBlockNumber,
         Convert.fromWei(usedGasPrice.toString(), Unit.ETHER));
