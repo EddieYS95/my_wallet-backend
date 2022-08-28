@@ -6,6 +6,7 @@ import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.web3j.protocol.core.methods.response.EthBlock;
 
 @Component
 @RequiredArgsConstructor
@@ -21,32 +22,25 @@ public class EtherObserver {
     runMissingAction();
   }
 
+  private void startObserver() {
+    ethereum.subscribeBlock(this::processTransaction);
+  }
+
   private void runMissingAction() {
     transactionService.processPendingTransaction();
     transactionService.processMinedTransaction();
 
-    ethereum.subscribePastBlock(transactionService.getLatestTransactionCount(), (block) -> {
-      log.info("past block number {}", block.getBlock().getNumber());
-      block.getBlock().getTransactions()
-          .stream().map(
-              transactionResult -> (org.web3j.protocol.core.methods.response.Transaction) transactionResult.get())
-          .forEach(transactionService::mined);
-      transactionService.confirmed(block.getBlock().getNumber());
-    });
+    ethereum.subscribePastBlock(transactionService.getLatestTransactionCount(),
+        this::processTransaction);
   }
 
-  private void startObserver() {
-    ethereum.subscribeBlock(block -> {
-      log.info("block number {}", block.getBlock().getNumber());
-      block.getBlock().getTransactions().stream()
-          .map(
-              transactionResult -> (org.web3j.protocol.core.methods.response.Transaction) transactionResult.get())
-          .filter(transactionService::checkRegularTransaction)
-          .forEach(transactionService::mined);
+  private void processTransaction(EthBlock block) {
+    block.getBlock().getTransactions()
+        .stream().map(
+            transactionResult -> (org.web3j.protocol.core.methods.response.Transaction) transactionResult.get())
+        .filter(transactionService::checkRegularTransaction)
+        .forEach(transactionService::mined);
 
-      transactionService.confirmed(block.getBlock().getNumber());
-    });
+    transactionService.confirmed(block.getBlock().getNumber());
   }
-
-
 }
