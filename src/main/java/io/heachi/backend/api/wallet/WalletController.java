@@ -43,7 +43,7 @@ public class WalletController {
   public Response<Page<TransactionDto>> getTransactionList(@PathVariable String address,
       @RequestParam(name = "starting_after", required = false) String startingAfter,
       @RequestParam(name = "ending_before", required = false) String endingBefore,
-      @PageableDefault(size = 10, sort = "idfTransaction", direction = Sort.Direction.DESC) Pageable pageable) {
+      @PageableDefault(sort = "idfTransaction", direction = Sort.Direction.DESC) Pageable pageable) {
     return walletService.getTransactionList(address, startingAfter, endingBefore, pageable);
   }
 }

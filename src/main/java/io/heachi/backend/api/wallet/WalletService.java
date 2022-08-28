@@ -94,7 +94,7 @@ public class WalletService {
     } else {
       Transaction startTransaction = transactionRepo.findByHash(startingAfter).orElse(null);
       Transaction endTransaction = transactionRepo.findByHash(endingBefore).orElse(null);
-      
+
       transactionPage = transactionRepo.searchAllByCreateAtBetween(startTransaction.getCreateAt(),
           endTransaction.getCreateAt(),
           pageable);
