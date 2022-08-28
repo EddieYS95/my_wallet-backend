@@ -147,6 +147,7 @@ public class TransactionService {
   public void processMinedTransaction() {
     List<Transaction> transactionList = transactionRepo.findAllByStatus(TransactionStatus.MINED);
     BigInteger latestBlockNumber = ethereum.getLatestBlockNumber();
+
     for (Transaction transaction : transactionList) {
       if (transaction.checkConfirmedBy(latestBlockNumber)) {
         Wallet fromWallet = walletRepo.findByAddress(transaction.getFromAddress()).orElse(null);
@@ -156,7 +157,7 @@ public class TransactionService {
     }
   }
 
-  public BigInteger getLatestTransactionCount() {
+  public BigInteger getLatestTransactionBlockNumber() {
     Transaction transaction = transactionRepo.findTopByOrderByIdfTransactionDesc()
         .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Wallet));
     return transaction.getBlockNumber();

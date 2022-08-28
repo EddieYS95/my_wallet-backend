@@ -30,7 +30,7 @@ public class EtherObserver {
     transactionService.processPendingTransaction();
     transactionService.processMinedTransaction();
 
-    ethereum.subscribePastBlock(transactionService.getLatestTransactionCount(),
+    ethereum.subscribePastBlock(transactionService.getLatestTransactionBlockNumber(),
         this::processTransaction);
   }
 
