@@ -29,6 +29,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @NoArgsConstructor
 public class Transaction {
 
+
   public enum TransactionStatus {
     PENDING, MINED, CONFIRMED
   }
@@ -84,5 +85,14 @@ public class Transaction {
   public boolean checkConfirmedBy(BigInteger blockNumber) {
     return this.getBlockNumber().longValue() + 11
         < blockNumber.longValue();
+  }
+
+  public int calculateBlockConfirmation(BigInteger latestBlockNumber) {
+    BigInteger blockConfirmation = latestBlockNumber.subtract(this.blockNumber);
+    if (blockConfirmation.compareTo(BigInteger.valueOf(11)) < 0) {
+      return blockConfirmation.intValue() + 1;
+    } else {
+      return 12;
+    }
   }
 }
