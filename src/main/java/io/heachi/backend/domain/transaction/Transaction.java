@@ -76,7 +76,13 @@ public class Transaction {
     } else if (to != null) {
       to.receivedEther(this.getValue());
     }
-    
+
     this.status = TransactionStatus.CONFIRMED;
+  }
+
+  //blockNumber를 이용하여 confirmed상태인지 확인합니다.
+  public boolean checkConfirmedBy(BigInteger blockNumber) {
+    return this.getBlockNumber().longValue() + 11
+        < blockNumber.longValue();
   }
 }

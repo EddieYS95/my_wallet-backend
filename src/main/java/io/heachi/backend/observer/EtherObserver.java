@@ -30,8 +30,8 @@ public class EtherObserver {
       block.getBlock().getTransactions()
           .stream().map(
               transactionResult -> (org.web3j.protocol.core.methods.response.Transaction) transactionResult.get())
-          .forEach(transactionService::mining);
-      transactionService.confirm(block.getBlock().getNumber());
+          .forEach(transactionService::mined);
+      transactionService.confirmed(block.getBlock().getNumber());
     });
   }
 
@@ -44,9 +44,9 @@ public class EtherObserver {
           .map(
               transactionResult -> (org.web3j.protocol.core.methods.response.Transaction) transactionResult.get())
           .filter(transactionService::checkRegularTransaction)
-          .forEach(transactionService::mining);
+          .forEach(transactionService::mined);
 
-      transactionService.confirm(block.getBlock().getNumber());
+      transactionService.confirmed(block.getBlock().getNumber());
     });
   }
 

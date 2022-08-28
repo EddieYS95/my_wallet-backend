@@ -82,7 +82,7 @@ public class TransactionService {
     transactionRepo.save(transaction);
   }
 
-  public void mining(org.web3j.protocol.core.methods.response.Transaction web3Transaction) {
+  public void mined(org.web3j.protocol.core.methods.response.Transaction web3Transaction) {
     Transaction transaction = transactionRepo.findByHash(web3Transaction.getHash())
         .orElse(null);
     BigInteger usedGasPrice = web3Transaction.getGasPrice().multiply(web3Transaction.getGas());
@@ -111,7 +111,7 @@ public class TransactionService {
         Convert.fromWei(usedGasPrice.toString(), Unit.ETHER));
   }
 
-  public void confirm(BigInteger blockNumber) {
+  public void confirmed(BigInteger blockNumber) {
     BigInteger confirmedBlockNumber = blockNumber
         .subtract(BigInteger.valueOf(11));
     List<Transaction> transactionList = transactionRepo.findAllByBlockNumber(
@@ -125,10 +125,6 @@ public class TransactionService {
     }
   }
 
-  public void subscribeBlock() {
-
-  }
-
   public boolean checkRegularTransaction(
       org.web3j.protocol.core.methods.response.Transaction transaction) {
     return transaction.getTo() != null && transaction.getFrom() != null
@@ -136,9 +132,11 @@ public class TransactionService {
   }
 
   public void processPendingTransaction() {
-    List<Transaction> transactionList = transactionRepo.findAllByStatus(TransactionStatus.PENDING);
-
     try {
+      List<Transaction> transactionList = transactionRepo.findAllByStatus(
+          TransactionStatus.PENDING);
+      BigInteger latestBlockNumber = ethereum.getLatestBlockNumber();
+
       for (Transaction transaction : transactionList) {
         org.web3j.protocol.core.methods.response.Transaction web3Transaction = ethereum.findTransaction(
             transaction.getHash()).orElse(null);
@@ -153,8 +151,7 @@ public class TransactionService {
           transaction.mined(web3Transaction.getBlockNumber(),
               Convert.fromWei(usedGasPrice.toString(), Unit.ETHER));
 
-          if (web3Transaction.getBlockNumber().longValue() + 11
-              < ethereum.getLatestBlockNumber().longValue()) {
+          if (transaction.checkConfirmedBy(latestBlockNumber)) {
             Wallet fromWallet = walletRepo.findByAddress(transaction.getFromAddress()).orElse(null);
             Wallet toWallet = walletRepo.findByAddress(transaction.getToAddress()).orElse(null);
             transaction.confirm(fromWallet, toWallet);
@@ -168,12 +165,11 @@ public class TransactionService {
 
   public void processMinedTransaction() {
     List<Transaction> transactionList = transactionRepo.findAllByStatus(TransactionStatus.MINED);
+    BigInteger latestBlockNumber = ethereum.getLatestBlockNumber();
     for (Transaction transaction : transactionList) {
-      if (transaction.getBlockNumber().longValue() + 11
-          < ethereum.getLatestBlockNumber().longValue()) {
+      if (transaction.checkConfirmedBy(latestBlockNumber)) {
         Wallet fromWallet = walletRepo.findByAddress(transaction.getFromAddress()).orElse(null);
         Wallet toWallet = walletRepo.findByAddress(transaction.getToAddress()).orElse(null);
-
         transaction.confirm(fromWallet, toWallet);
       }
     }
