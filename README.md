@@ -6,7 +6,7 @@
 
 #### 1. 지갑 생성
 
-```http request
+```
 POST {{url}}/wallets
 
 request body : {
@@ -18,7 +18,7 @@ request body : {
 
 #### 2. 지갑 ETH 잔액 조회
 
-```http request
+```
 GET {{url}}/wallets/:address
 
 request param : {
@@ -36,7 +36,7 @@ response : {
 
 #### 3. 출금
 
-```http request
+```
 POST {{url}}/transactions
 
 request body : {
@@ -47,13 +47,13 @@ request body : {
 }
 
 response : {
-    "Transaction Created" 출력시 송금 성공
+    "Transaction Created (출력시 송금 성공)" 
 }
 ```
 
 #### 4. 입출금 이벤트 조회
 
-```http request
+```
 GET {{url}}/wallets/:address/transactions
 
 request param: {
