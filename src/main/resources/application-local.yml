@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: local
   application:
     name: pingpong-api
   jpa:
@@ -25,7 +25,7 @@ spring:
     ansi:
       enabled: always
   datasource:
-    url: jdbc:postgresql://db:5432/heachi
+    url: jdbc:postgresql://localhost:5432/heachi
     username: heachi
     password: gocl00!!
 ethereum:
