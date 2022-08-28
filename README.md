@@ -40,10 +40,10 @@ response : {
 POST {{url}}/transactions
 
 request body : {
-    "fromAddress": 출금할 지갑의 주소,
-    "password": 출금할 지갑의 패스워드 (지갑 생성시 입력한 암호),
-    "toAddress": 입금할 지갑의 주소,
-    "eth": 입급할 금액
+    "fromAddress": "출금할 지갑의 주소"
+    "password": "출금할 지갑의 패스워드 (지갑 생성시 입력한 암호)"
+    "toAddress": "입금할 지갑의 주소"
+    "eth": "입급할 금액"
 }
 
 response : {
@@ -57,17 +57,17 @@ response : {
 GET {{url}}/wallets/:address/transactions
 
 request param: {
-    "address": 입출금 이벤트를 조회할 지갑의 주소
+    "address": "입출금 이벤트를 조회할 지갑의 주소"
 }
 
 response : {
-    "idfTransaction": 고유 식별 번호,
-    "hash": Transaction의 Hash값,
-    "status": 트랜잭션 처리상태 (PENDING, MINED, CONFIRMED),
-    "blockConfirmation (Optional)": 트랜잭션이 블록에 채굴된 뒤 추가로 쌓인 블록의 수,
-    "value": 전송할 ETH의 양,
-    "fee (Optional)": 전송시 사용된 ETH 수수료,
-    "from": 출금한 지갑의 주소,
-    "to": 입금받은 지갑의 주소
+    "idfTransaction": "고유 식별 번호"
+    "hash": "Transaction의 Hash값"
+    "status": "트랜잭션 처리상태 (PENDING, MINED, CONFIRMED)"
+    "blockConfirmation (Optional)": "트랜잭션이 블록에 채굴된 뒤 추가로 쌓인 블록의 수"
+    "value": "전송할 ETH의 양"
+    "fee (Optional)": "전송시 사용된 ETH 수수료"
+    "from": "출금한 지갑의 주소"
+    "to": "입금받은 지갑의 주소"
 }
 ```
