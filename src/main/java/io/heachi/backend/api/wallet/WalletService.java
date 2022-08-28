@@ -15,6 +15,7 @@ import io.heachi.backend.infra.blockchain.Ethereum;
 import io.heachi.backend.infra.blockchain.base.WalletInfo;
 import io.heachi.backend.infra.crypto.AesUtil;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -88,17 +89,36 @@ public class WalletService {
         .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Wallet));
     Page<Transaction> transactionPage;
 
+    // QueryDSL을 이용한 동적 쿼리 생성 및 최적화
     if (startingAfter == null && endingBefore == null) {
       transactionPage = transactionRepo.searchAllByToAddressOrFromAddress(wallet.getAddress(),
           wallet.getAddress(), pageable);
+    } else if (endingBefore == null) {
+      Transaction startTransaction = transactionRepo.findByHash(startingAfter)
+          .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Transaction));
+
+      transactionPage = transactionRepo.searchAllByCreateAtGreaterThanEqual(
+          startTransaction.getCreateAt(),
+          pageable);
+    } else if (startingAfter == null) {
+      Transaction endTransaction = transactionRepo.findByHash(endingBefore)
+          .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Transaction));
+
+      transactionPage = transactionRepo.searchAllByCreateAtLessThanEqual(
+          endTransaction.getCreateAt(),
+          pageable);
     } else {
-      Transaction startTransaction = transactionRepo.findByHash(startingAfter).orElse(null);
-      Transaction endTransaction = transactionRepo.findByHash(endingBefore).orElse(null);
+      Transaction startTransaction = transactionRepo.findByHash(startingAfter)
+          .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Transaction));
+      Transaction endTransaction = transactionRepo.findByHash(endingBefore)
+          .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Transaction));
 
       transactionPage = transactionRepo.searchAllByCreateAtBetween(startTransaction.getCreateAt(),
           endTransaction.getCreateAt(),
           pageable);
     }
+
+    BigInteger latestBlockNumber = ethereum.getLatestBlockNumber();
 
     Page<TransactionDto> payload = transactionPage.map((transaction -> {
       TransactionDto transactionDto = new TransactionDto();
@@ -108,9 +128,7 @@ public class WalletService {
       transactionDto.setFrom(transaction.getFromAddress());
 
       if (transaction.getStatus() != TransactionStatus.PENDING) {
-        int blockConfirmation = ethereum.getLatestBlockNumber()
-            .subtract(transaction.getBlockNumber()).intValue();
-
+        int blockConfirmation = transaction.calculateBlockConfirmation(latestBlockNumber);
         transactionDto.setBlockConfirmation(blockConfirmation);
       }
       return transactionDto;
