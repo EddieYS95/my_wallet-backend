@@ -20,8 +20,14 @@ public interface TransactionRepo extends JpaRepository<Transaction, Long> {
   Page<Transaction> searchAllByCreateAtBetween(LocalDateTime startDateTime,
       LocalDateTime endDateTime, Pageable pageable);
 
+  Page<Transaction> searchAllByCreateAtGreaterThanEqual(LocalDateTime startDateTime,
+      Pageable pageable);
+
+  Page<Transaction> searchAllByCreateAtLessThanEqual(LocalDateTime endDateTime, Pageable pageable);
+
   Page<Transaction> searchAllByToAddressOrFromAddress(String toAddress, String fromAddress,
       Pageable pageable);
+
 
   List<Transaction> findAllByStatus(TransactionStatus pending);
 
