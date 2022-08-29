@@ -34,6 +34,7 @@ public class EtherObserver {
     BigInteger latestTransactionBlockNumber = transactionService.getLatestTransactionBlockNumber();
     if (latestTransactionBlockNumber == null) {
       subscribeFutureBlock();
+      return;
     }
 
     ethereum.subscribePastAndFutureBlock(latestTransactionBlockNumber,

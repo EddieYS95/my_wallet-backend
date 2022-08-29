@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Optional;
 import java.util.UUID;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -37,11 +38,15 @@ import org.web3j.utils.Numeric;
 @Slf4j
 public class Ethereum implements Blockchain {
 
-  @Value("{ethereum.url}")
+  @Value("${ethereum.url}")
   private String nodeUrl;
-  private final Admin admin = Admin.build(new HttpService(nodeUrl));
-  private final Web3j web3j = Web3j.build(new HttpService(nodeUrl));
+  private Web3j web3j;
   private BigInteger latestBlockNumber = null;
+
+  @PostConstruct
+  void postConstruct(){
+    web3j = Web3j.build(new HttpService(nodeUrl));
+  }
 
   @Override
   public WalletInfo createWallet() {
