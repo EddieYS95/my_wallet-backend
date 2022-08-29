@@ -2,19 +2,24 @@ package io.heachi.backend.api.transaction;
 
 import io.heachi.backend.Response;
 import io.heachi.backend.api.transaction.TransactionDto.CreateDto;
+import io.heachi.backend.api.transaction.TransactionDto.EventDto;
 import io.heachi.backend.domain.transaction.Transaction;
 import io.heachi.backend.domain.transaction.Transaction.TransactionStatus;
-import io.heachi.backend.domain.transaction.TransactionRepo;
+import io.heachi.backend.domain.transaction.repository.TransactionRepo;
 import io.heachi.backend.domain.wallet.Wallet;
 import io.heachi.backend.domain.wallet.WalletRepo;
 import io.heachi.backend.exception.LogicErrorList;
 import io.heachi.backend.exception.LogicException;
 import io.heachi.backend.infra.blockchain.Ethereum;
 import io.heachi.backend.infra.crypto.AesUtil;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.web3j.utils.Convert;
@@ -45,6 +50,11 @@ public class TransactionService {
       throw new LogicException(LogicErrorList.NotEnough_Balance);
     }
 
+    BigDecimal chainBalance = ethereum.getBalance(wallet.getAddress());
+    if (chainBalance.compareTo(createDto.getEth()) < 0) {
+      throw new LogicException(LogicErrorList.NotEnough_ChainBalance);
+    }
+
     String transactionHash = ethereum.transfer(wallet.getAddress(), privateKey,
         createDto.getToAddress(),
         createDto.getEth());
@@ -61,48 +71,58 @@ public class TransactionService {
         .status(TransactionStatus.PENDING)
         .build();
     transactionRepo.save(transaction);
+    transaction.pending();
 
     return Response.<String>ok().body("Transaction Created");
   }
 
   public void mined(org.web3j.protocol.core.methods.response.Transaction web3Transaction) {
-    Transaction transaction = transactionRepo.findByHash(web3Transaction.getHash())
-        .orElse(null);
-    BigInteger usedGasPrice = web3Transaction.getGasPrice().multiply(web3Transaction.getGas());
+    try {
+      Transaction transaction = transactionRepo.findByHash(web3Transaction.getHash())
+          .orElse(null);
+      BigInteger usedGasPrice = web3Transaction.getGasPrice().multiply(web3Transaction.getGas());
 
-    if (transaction == null) {
-      Wallet wallet = walletRepo.findByAddress(web3Transaction.getTo()).orElse(null);
-      if (wallet == null) {
-        return;
+      if (transaction == null) {
+        Wallet wallet = walletRepo.findByAddress(web3Transaction.getTo()).orElse(null);
+        if (wallet == null) {
+          return;
+        }
+
+        transaction = Transaction.builder()
+            .hash(web3Transaction.getHash())
+            .fromAddress(web3Transaction.getFrom())
+            .toAddress(wallet.getAddress())
+            .blockConfirmation(0)
+            .value(Convert.fromWei(web3Transaction.getValue().toString(), Unit.ETHER))
+            .status(TransactionStatus.PENDING)
+            .build();
+        transactionRepo.save(transaction);
       }
 
-      transaction = Transaction.builder()
-          .hash(web3Transaction.getHash())
-          .fromAddress(web3Transaction.getFrom())
-          .toAddress(wallet.getAddress())
-          .value(Convert.fromWei(web3Transaction.getValue().toString(), Unit.ETHER))
-          .status(TransactionStatus.PENDING)
-          .build();
-      transactionRepo.save(transaction);
+      BigInteger minedBlockNumber = web3Transaction.getBlockNumber();
+
+      transaction.mined(minedBlockNumber,
+          Convert.fromWei(usedGasPrice.toString(), Unit.ETHER));
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-
-    BigInteger minedBlockNumber = web3Transaction.getBlockNumber();
-
-    transaction.mined(minedBlockNumber,
-        Convert.fromWei(usedGasPrice.toString(), Unit.ETHER));
   }
 
   public void confirmed(BigInteger blockNumber) {
-    BigInteger confirmedBlockNumber = blockNumber
-        .subtract(BigInteger.valueOf(11));
-    List<Transaction> transactionList = transactionRepo.findAllByBlockNumber(
-        confirmedBlockNumber);
-
+    List<Transaction> transactionList = transactionRepo.findAllByBlockConfirmationBefore(12);
     for (Transaction transaction : transactionList) {
-      Wallet fromWallet = walletRepo.findByAddress(transaction.getFromAddress()).orElse(null);
-      Wallet toWallet = walletRepo.findByAddress(transaction.getToAddress()).orElse(null);
 
-      transaction.confirm(fromWallet, toWallet);
+      if (transaction.getBlockNumber() != null
+          && transaction.getBlockNumber().compareTo(blockNumber) < 0) {
+        transaction.addBlockConfirmation();
+      }
+
+      if (transaction.getBlockConfirmation() >= 12) {
+        Wallet fromWallet = walletRepo.findByAddress(transaction.getFromAddress()).orElse(null);
+        Wallet toWallet = walletRepo.findByAddress(transaction.getToAddress()).orElse(null);
+
+        transaction.confirm(fromWallet, toWallet);
+      }
     }
   }
 
@@ -159,7 +179,18 @@ public class TransactionService {
 
   public BigInteger getLatestTransactionBlockNumber() {
     Transaction transaction = transactionRepo.findTopByOrderByIdfTransactionDesc()
-        .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Wallet));
+        .orElse(null);
+    if (transaction == null) {
+      return null;
+    }
     return transaction.getBlockNumber();
+  }
+
+  public Response<Page<EventDto>> getEventList(LocalDateTime startingAfter,
+      LocalDateTime endingBefore,
+      Pageable pageable) {
+    Page<EventDto> events = transactionRepo.findAllEventDtoBy(startingAfter, endingBefore,
+        pageable);
+    return Response.<Page<EventDto>>ok().body(events);
   }
 }
