@@ -1,6 +1,6 @@
 spring:
   application:
-    name: pingpong-api
+    name: heachi-backend
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQL10Dialect
     show-sql: false

@@ -38,7 +38,7 @@ import org.web3j.utils.Numeric;
 public class Ethereum implements Blockchain {
 
   @Value("{ethereum.url}")
-  private String nodeUrl = "https://tn.henesis.io/ethereum/ropsten?clientId=815fcd01324b8f75818a755a72557750";
+  private String nodeUrl;
   private final Admin admin = Admin.build(new HttpService(nodeUrl));
   private final Web3j web3j = Web3j.build(new HttpService(nodeUrl));
   private BigInteger latestBlockNumber = null;
