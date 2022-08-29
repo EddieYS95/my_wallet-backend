@@ -10,6 +10,7 @@ public class WalletDto {
 
   private String address;
   private BigDecimal balance;
+  private BigDecimal usableBalance;
 
   @Data
   public static class CreateDto {

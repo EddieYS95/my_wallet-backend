@@ -56,6 +56,8 @@ public class WalletService {
     WalletDto payload = new WalletDto();
     BeanUtils.copyProperties(wallet, payload);
 
+    log.info("[WALLET] create wallet address: {}", wallet.getAddress());
+
     return Response.<WalletDto>ok().body(payload);
   }
 
@@ -72,10 +74,12 @@ public class WalletService {
   public Response<WalletDto> getDetailByAddress(String address) {
     Wallet wallet = walletRepo.findByAddress(address)
         .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Wallet));
-
+    BigDecimal usableBalance = ethereum.getBalance(address);
     WalletDto payload = new WalletDto();
     BeanUtils.copyProperties(wallet, payload);
+    payload.setUsableBalance(usableBalance);
 
+    log.info("[WALLET] wallet detail balance: {}, usableBalance: {}", wallet.getBalance(), usableBalance);
     return Response.<WalletDto>ok().body(payload);
   }
 
@@ -90,6 +94,7 @@ public class WalletService {
         endingBefore,
         pageable);
 
+    log.info("[WALLET] get transaction list wallet address: {}", wallet.getAddress());
     return Response.<Page<TransactionDto>>ok().body(payload);
   }
 }

@@ -73,6 +73,7 @@ public class TransactionService {
     transactionRepo.save(transaction);
     transaction.pending();
 
+    log.info("[TRANSACTION] create transaction(PENDING) hash: {}, value: {}", transactionHash, createDto.getEth());
     return Response.<String>ok().body("Transaction Created");
   }
 
@@ -103,6 +104,8 @@ public class TransactionService {
 
       transaction.mined(minedBlockNumber,
           Convert.fromWei(usedGasPrice.toString(), Unit.ETHER));
+
+      log.info("[TRANSACTION] mine transaction(MINED) hash: {}, blockNumber: {}, transaction fee: {}", transaction.getHash(), minedBlockNumber,  Convert.fromWei(usedGasPrice.toString(), Unit.ETHER));
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -122,6 +125,7 @@ public class TransactionService {
         Wallet toWallet = walletRepo.findByAddress(transaction.getToAddress()).orElse(null);
 
         transaction.confirm(fromWallet, toWallet);
+        log.info("[TRANSACTION] confirm transaction(CONFIRMED) hash: {}, value: {}", transaction.getHash(), transaction.getValue());
       }
     }
   }
@@ -191,6 +195,7 @@ public class TransactionService {
       Pageable pageable) {
     Page<EventDto> events = transactionRepo.findAllEventDtoBy(startingAfter, endingBefore,
         pageable);
+    log.info("[TRANSACTION] getEventList startingAfter: {}, endingBefore:{}", startingAfter, endingBefore);
     return Response.<Page<EventDto>>ok().body(events);
   }
 }
