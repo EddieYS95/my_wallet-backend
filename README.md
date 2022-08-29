@@ -4,7 +4,7 @@
 
 ### Project 설정
 
-- QueryDSL사용으로 QEntity생성을 위해 gradle compileQuerydsl을 수행해야합니다.
+- QueryDSL사용으로 QClass 생성을 위해 gradle compileQuerydsl을 수행해야합니다.
 - 기본 `application.yml`은 배포용으로 active profile을 local로 변경합니다.
 - PostgreSQL은 `heachi/gocl00!!`로 접속해야합니다.
 ![img.png](.github/projectProfileSetImg.png)
