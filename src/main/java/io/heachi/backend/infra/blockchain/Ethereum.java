@@ -66,9 +66,13 @@ public class Ethereum implements Blockchain {
   }
 
   @Override
-  public BigInteger getBalance(String address) throws IOException {
-    EthGetBalance balance = web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send();
-    return balance.getBalance();
+  public BigDecimal getBalance(String address) {
+    try {
+      EthGetBalance balance = web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send();
+      return Convert.fromWei(balance.getBalance().toString(), Unit.ETHER);
+    } catch (IOException e) {
+      return null;
+    }
   }
 
   @Override
@@ -140,10 +144,11 @@ public class Ethereum implements Blockchain {
     return web3j.ethGetTransactionByHash(hash).send().getTransaction();
   }
 
-  public Disposable subscribePastBlock(BigInteger startBlockNumber, Consumer<EthBlock> consumer) {
+  public Disposable subscribePastAndFutureBlock(BigInteger startBlockNumber,
+      Consumer<EthBlock> consumer) {
     DefaultBlockParameterNumber number = new DefaultBlockParameterNumber(
         startBlockNumber);
-    return web3j.replayPastBlocksFlowable(number, DefaultBlockParameterName.LATEST
+    return web3j.replayPastAndFutureBlocksFlowable(number
         , true).subscribe(consumer,
         throwable -> log.error("subscribePastBlock Throwable {}", throwable.getMessage()));
   }
