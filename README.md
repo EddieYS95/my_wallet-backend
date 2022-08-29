@@ -1,6 +1,13 @@
 # MY WALLET
 
-- Spring Boot, JPA, Web3J, PostegreSQL를 기본으로 사용했습니다.
+- Spring Boot, JPA + QueryDSL, Web3J, PostegreSQL를 기본으로 사용했습니다.
+
+### Project 설정
+
+- QueryDSL사용으로 QEntity생성을 위해 gradle compileQuerydsl을 수행해야합니다.
+- 기본 `application.yml`은 배포용으로 active profile을 local로 변경합니다.
+- PostgreSQL은 `heachi/gocl00!!`로 접속해야합니다.
+![img.png](.github/projectProfileSetImg.png)
 
 ### API 요구사항
 
