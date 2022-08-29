@@ -2,6 +2,7 @@ package io.heachi.backend.observer;
 
 import io.heachi.backend.api.transaction.TransactionService;
 import io.heachi.backend.infra.blockchain.Ethereum;
+import java.math.BigInteger;
 import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,22 +20,27 @@ public class EtherObserver {
   @PostConstruct
   public void postConstruct() {
     startObserver();
-    runMissingAction();
+  }
+
+  private void subscribeFutureBlock() {
+    log.info("start observer");
+    ethereum.subscribeBlock(this::processBlock);
   }
 
   private void startObserver() {
-    ethereum.subscribeBlock(this::processTransaction);
-  }
-
-  private void runMissingAction() {
     transactionService.processPendingTransaction();
     transactionService.processMinedTransaction();
 
-    ethereum.subscribePastBlock(transactionService.getLatestTransactionBlockNumber(),
-        this::processTransaction);
+    BigInteger latestTransactionBlockNumber = transactionService.getLatestTransactionBlockNumber();
+    if (latestTransactionBlockNumber == null) {
+      subscribeFutureBlock();
+    }
+
+    ethereum.subscribePastAndFutureBlock(latestTransactionBlockNumber,
+        this::processBlock);
   }
 
-  private void processTransaction(EthBlock block) {
+  private void processBlock(EthBlock block) {
     block.getBlock().getTransactions()
         .stream().map(
             transactionResult -> (org.web3j.protocol.core.methods.response.Transaction) transactionResult.get())
