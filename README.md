@@ -125,3 +125,145 @@ Controller역할을 수행합니다.
 
 * subscribeBlock의 Flowable를 TransactionService에서 처리시 @Transactional처리에 문제를 발견하여 Observer에서
   infra.blockchain.Ethereum을 직접 사용하여 TransactionService로 전파합니다.
+
+### 테스트 시나리오
+
+테스트 시나리오는 보내주신 테스트 시나리오를 기반으로 작성했습니다.
+
+1. 지갑생성 API 호출
+
+- 생성에 성공한 address의 주소를 출력해 줍니다.
+- Private Key는 암호화 되어 Password없이 복호화가 불가합니다.
+
+```json
+{
+  "code": 0,
+  "payload": {
+    "address": "0xc045685d4f8dee3190849dfa28d8adf655fc6977",
+    "balance": 0
+  }
+}
+```
+
+2. 생성한 지갑으로 전송
+
+- 생성한 지갑으로 1ETH를 전송합니다.
+- wallets/:address/transactions를 통해 불러온 트랜잭션 정보입니다.
+- 이더스캔을 통해 확인한 트랜잭션 정보를 함께 첨부합니다.
+
+```json
+{
+  "idfTransaction": 71,
+  "hash": "0x90ee71e66de7dd02eb483a1c6eba67ae7cce2d066b17a276c2667057e61e06ac",
+  "status": "CONFIRMED",
+  "blockConfirmation": 12,
+  "value": 1.000000000000000000,
+  "fee": 0.000031500000147000,
+  "from": "0xfda13da0fb90999f9544971bc2ff87de9c525288",
+  "to": "0xc045685d4f8dee3190849dfa28d8adf655fc6977"
+}
+```
+
+![img.png](.github/img.png)
+
+3. 2ETH 외부 지갑에 전송
+
+- 이더리움 부족에 의해 트랜잭션이 실패합니다.
+- 500 (Internal Server Error)와 함께 지갑 부족에 대한 안내를 출력합니다.
+
+```json
+{
+  "errorCode": 201,
+  "errorMsg": "NotEnough_Balance",
+  "payload": "지갑의 잔액이 부족합니다."
+}
+```
+
+4. Transaction 수행 (0.5ETH 전송)
+
+- 1ETH를 받은 지갑으로 0.5ETH 전송
+
+```json
+{
+  "idfTransaction": 72,
+  "hash": "0x76b88b2f1e290e344e8466295524d340d18bae2261a64a470b9e9b549fdf1c94",
+  "status": "CONFIRMED",
+  "blockConfirmation": 12,
+  "value": 0.500000000000000000,
+  "fee": 0.000450960000960000,
+  "from": "0xc045685d4f8dee3190849dfa28d8adf655fc6977",
+  "to": "0xFDA13da0FB90999F9544971bC2fF87DE9c525288"
+}
+```
+
+5. 0.5 ETH 전송
+
+- Confirmed 이전에 사용 가능한 잔액을 초과한 금액의 출금을 요청할 경우 별도의 에러로 처리했습니다.
+
+```json
+{
+  "errorCode": 202,
+  "errorMsg": "NotEnough_ChainBalance",
+  "payload": "출금가능한 지갑의 잔액이 부족합니다. PENDING중이거나 MINED상태의 트랜잭션을 확인해 주세요."
+}
+```
+
+6. EventList API 호출
+
+- 시간의 역순으로 출력
+
+```json
+[
+  {
+    "idfEvent": 170,
+    "hash": "0x76b88b2f1e290e344e8466295524d340d18bae2261a64a470b9e9b549fdf1c94",
+    "status": "CONFIRMED",
+    "blockConfirmation": 12,
+    "createdAt": "2022-08-29 06:15:06"
+  },
+  {
+    "idfEvent": 169,
+    "hash": "0x76b88b2f1e290e344e8466295524d340d18bae2261a64a470b9e9b549fdf1c94",
+    "status": "MINED",
+    "blockConfirmation": 12,
+    "createdAt": "2022-08-29 06:15:06"
+  },
+  ...
+  {
+    "idfEvent": 158,
+    "hash": "0x76b88b2f1e290e344e8466295524d340d18bae2261a64a470b9e9b549fdf1c94",
+    "status": "MINED",
+    "blockConfirmation": 1,
+    "createdAt": "2022-08-29 06:12:36"
+  },
+  {
+    "idfEvent": 157,
+    "hash": "0x76b88b2f1e290e344e8466295524d340d18bae2261a64a470b9e9b549fdf1c94",
+    "status": "PENDING",
+    "blockConfirmation": 0,
+    "createdAt": "2022-08-29 06:12:12"
+  },
+  {
+    "idfEvent": 156,
+    "hash": "0x90ee71e66de7dd02eb483a1c6eba67ae7cce2d066b17a276c2667057e61e06ac",
+    "status": "CONFIRMED",
+    "blockConfirmation": 12,
+    "createdAt": "2022-08-29 06:08:57"
+  },
+  {
+    "idfEvent": 155,
+    "hash": "0x90ee71e66de7dd02eb483a1c6eba67ae7cce2d066b17a276c2667057e61e06ac",
+    "status": "MINED",
+    "blockConfirmation": 12,
+    "createdAt": "2022-08-29 06:08:57"
+  },
+  {
+    "idfEvent": 154,
+    "hash": "0x90ee71e66de7dd02eb483a1c6eba67ae7cce2d066b17a276c2667057e61e06ac",
+    "status": "MINED",
+    "blockConfirmation": 11,
+    "createdAt": "2022-08-29 06:08:56"
+  },
+  ...
+]
+```
