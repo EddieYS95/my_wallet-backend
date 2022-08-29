@@ -3,9 +3,7 @@ package io.heachi.backend.api.wallet;
 import io.heachi.backend.Response;
 import io.heachi.backend.api.wallet.WalletDto.CreateDto;
 import io.heachi.backend.api.wallet.WalletDto.TransactionDto;
-import io.heachi.backend.domain.transaction.Transaction;
-import io.heachi.backend.domain.transaction.Transaction.TransactionStatus;
-import io.heachi.backend.domain.transaction.TransactionRepo;
+import io.heachi.backend.domain.transaction.repository.TransactionRepo;
 import io.heachi.backend.domain.wallet.Wallet;
 import io.heachi.backend.domain.wallet.WalletRepo;
 import io.heachi.backend.domain.wallet.WalletType;
@@ -15,7 +13,7 @@ import io.heachi.backend.infra.blockchain.Ethereum;
 import io.heachi.backend.infra.blockchain.base.WalletInfo;
 import io.heachi.backend.infra.crypto.AesUtil;
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -82,57 +80,15 @@ public class WalletService {
   }
 
   public Response<Page<TransactionDto>> getTransactionList(String walletAddress,
-      String startingAfter,
-      String endingBefore,
+      LocalDateTime startingAfter,
+      LocalDateTime endingBefore,
       Pageable pageable) {
     Wallet wallet = walletRepo.findByAddress(walletAddress)
         .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Wallet));
-    Page<Transaction> transactionPage;
 
-    // QueryDSL을 이용한 동적 쿼리 생성 및 최적화
-    if (startingAfter == null && endingBefore == null) {
-      transactionPage = transactionRepo.searchAllByToAddressOrFromAddress(wallet.getAddress(),
-          wallet.getAddress(), pageable);
-    } else if (endingBefore == null) {
-      Transaction startTransaction = transactionRepo.findByHash(startingAfter)
-          .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Transaction));
-
-      transactionPage = transactionRepo.searchAllByCreateAtGreaterThanEqual(
-          startTransaction.getCreateAt(),
-          pageable);
-    } else if (startingAfter == null) {
-      Transaction endTransaction = transactionRepo.findByHash(endingBefore)
-          .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Transaction));
-
-      transactionPage = transactionRepo.searchAllByCreateAtLessThanEqual(
-          endTransaction.getCreateAt(),
-          pageable);
-    } else {
-      Transaction startTransaction = transactionRepo.findByHash(startingAfter)
-          .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Transaction));
-      Transaction endTransaction = transactionRepo.findByHash(endingBefore)
-          .orElseThrow(() -> new LogicException(LogicErrorList.DoesNotExit_Transaction));
-
-      transactionPage = transactionRepo.searchAllByCreateAtBetween(startTransaction.getCreateAt(),
-          endTransaction.getCreateAt(),
-          pageable);
-    }
-
-    BigInteger latestBlockNumber = ethereum.getLatestBlockNumber();
-
-    Page<TransactionDto> payload = transactionPage.map((transaction -> {
-      TransactionDto transactionDto = new TransactionDto();
-      BeanUtils.copyProperties(transaction, transactionDto);
-      transactionDto.setFee(transaction.getGasPrice());
-      transactionDto.setTo(transaction.getToAddress());
-      transactionDto.setFrom(transaction.getFromAddress());
-
-      if (transaction.getStatus() != TransactionStatus.PENDING) {
-        int blockConfirmation = transaction.calculateBlockConfirmation(latestBlockNumber);
-        transactionDto.setBlockConfirmation(blockConfirmation);
-      }
-      return transactionDto;
-    }));
+    Page<TransactionDto> payload = transactionRepo.findAllDtoBy(wallet, startingAfter,
+        endingBefore,
+        pageable);
 
     return Response.<Page<TransactionDto>>ok().body(payload);
   }
