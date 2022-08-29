@@ -1,6 +1,8 @@
-package io.heachi.backend.domain.transaction;
+package io.heachi.backend.domain.transaction.repository;
 
+import io.heachi.backend.domain.transaction.Transaction;
 import io.heachi.backend.domain.transaction.Transaction.TransactionStatus;
+import io.heachi.backend.domain.transaction.TransactionEvent;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -16,17 +18,6 @@ public interface TransactionRepo extends JpaRepository<Transaction, Long>, Trans
   Optional<Transaction> findByHash(String hash);
 
   List<Transaction> findAllByBlockConfirmationBefore(int blockNumber);
-
-  Page<Transaction> searchAllByCreateAtBetween(LocalDateTime startDateTime,
-      LocalDateTime endDateTime, Pageable pageable);
-
-  Page<Transaction> searchAllByCreateAtGreaterThanEqual(LocalDateTime startDateTime,
-      Pageable pageable);
-
-  Page<Transaction> searchAllByCreateAtLessThanEqual(LocalDateTime endDateTime, Pageable pageable);
-
-  Page<Transaction> searchAllByToAddressOrFromAddress(String toAddress, String fromAddress,
-      Pageable pageable);
 
   List<Transaction> findAllByStatus(TransactionStatus pending);
 
