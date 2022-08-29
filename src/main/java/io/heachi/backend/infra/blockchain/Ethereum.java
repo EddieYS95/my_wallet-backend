@@ -124,15 +124,8 @@ public class Ethereum implements Blockchain {
     return null;
   }
 
-  public Disposable subscribeBlock(Consumer<EthBlock> consumer) {
-    return web3j.blockFlowable(true)
-        .subscribe(ethBlock -> {
-              latestBlockNumber = ethBlock.getBlock().getNumber();
-              consumer.accept(ethBlock);
-            },
-            throwable -> log.error("subscribeBlock Throwable {}", throwable.getMessage()));
-  }
 
+  @Override
   public BigInteger getLatestBlockNumber() {
     if (latestBlockNumber == null) {
       try {
@@ -141,12 +134,25 @@ public class Ethereum implements Blockchain {
         log.error("get block number >> error");
       }
     }
-
     return latestBlockNumber;
   }
 
-  public Optional<Transaction> findTransaction(String hash) throws IOException {
-    return web3j.ethGetTransactionByHash(hash).send().getTransaction();
+  @Override
+  public Optional<Transaction> findTransaction(String hash)  {
+    try {
+      return web3j.ethGetTransactionByHash(hash).send().getTransaction();
+    }catch (Exception e){
+      return Optional.empty();
+    }
+  }
+
+  public Disposable subscribeBlock(Consumer<EthBlock> consumer) {
+    return web3j.blockFlowable(true)
+        .subscribe(ethBlock -> {
+              latestBlockNumber = ethBlock.getBlock().getNumber();
+              consumer.accept(ethBlock);
+            },
+            throwable -> log.error("subscribeBlock Throwable {}", throwable.getMessage()));
   }
 
   public Disposable subscribePastAndFutureBlock(BigInteger startBlockNumber,

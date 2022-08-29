@@ -37,7 +37,7 @@ public class EtherObserver {
       return;
     }
 
-    ethereum.subscribePastAndFutureBlock(latestTransactionBlockNumber,
+    ethereum.<EthBlock>subscribePastAndFutureBlock(latestTransactionBlockNumber,
         this::processBlock);
   }
 
