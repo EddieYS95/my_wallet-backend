@@ -128,7 +128,7 @@ class WalletServiceTest {
     assertThat(response.getPayload().getAddress()).isEqualTo("wallet1");
     assertThat(response.getPayload().getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
     assertThat(response.getPayload().getUsableBalance()).isEqualByComparingTo(
-        BigDecimal.valueOf(0.1));
+        BigDecimal.valueOf(10));
   }
 
   @Test
