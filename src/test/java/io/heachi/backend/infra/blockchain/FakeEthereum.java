@@ -1,6 +1,5 @@
 package io.heachi.backend.infra.blockchain;
 
-import io.heachi.backend.domain.wallet.Wallet;
 import io.heachi.backend.infra.blockchain.base.Blockchain;
 import io.heachi.backend.infra.blockchain.base.WalletInfo;
 import java.math.BigDecimal;
@@ -17,12 +16,12 @@ public class FakeEthereum implements Blockchain {
 
   @Override
   public BigDecimal getBalance(String address) {
-    return BigDecimal.valueOf(0.1);
+    return BigDecimal.valueOf(10);
   }
 
   @Override
   public String transfer(String address, String privateKey, String toHash, BigDecimal eth) {
-    return null;
+    return "transaction_hash";
   }
 
   @Override
