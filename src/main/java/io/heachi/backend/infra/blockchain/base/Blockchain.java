@@ -13,7 +13,7 @@ public interface Blockchain {
 
   WalletInfo createWallet();
 
-  BigDecimal getBalance(String address) throws IOException;
+  BigDecimal getBalance(String address);
 
   String transfer(String address, String privateKey, String toHash, BigDecimal eth);
 

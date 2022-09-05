@@ -10,6 +10,7 @@ import io.heachi.backend.domain.wallet.WalletType;
 import io.heachi.backend.exception.LogicErrorList;
 import io.heachi.backend.exception.LogicException;
 import io.heachi.backend.infra.blockchain.Ethereum;
+import io.heachi.backend.infra.blockchain.base.Blockchain;
 import io.heachi.backend.infra.blockchain.base.WalletInfo;
 import io.heachi.backend.infra.crypto.AesUtil;
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cglib.core.Block;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,7 +36,7 @@ public class WalletService {
   private final WalletRepo walletRepo;
   private final TransactionRepo transactionRepo;
 
-  private final Ethereum ethereum;
+  private final Blockchain ethereum;
   private final AesUtil aesUtil;
 
   public Response<WalletDto> create(CreateDto createDto) {
