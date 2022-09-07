@@ -45,14 +45,14 @@ public class Transaction {
   private Long idfTransaction;
 
   private String hash;
-  @Column(precision = 36, scale = 18)
+  @Column(precision = 36, scale = 18, name = "_value")
   private BigDecimal value;
   @Column(precision = 36, scale = 18)
   private BigDecimal gasPrice;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private TransactionStatus status = TransactionStatus.PENDING;
+  private TransactionStatus status;
 
   private String fromAddress;
   private String toAddress;
@@ -65,7 +65,7 @@ public class Transaction {
   private LocalDateTime updateAt;
 
   @OneToMany(mappedBy = "transaction", cascade = {CascadeType.PERSIST})
-  List<TransactionEvent> eventList = new ArrayList<>();
+  List<TransactionEvent> eventList;
 
   public void pending() {
     if (status == TransactionStatus.MINED || status == TransactionStatus.CONFIRMED) {

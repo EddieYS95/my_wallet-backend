@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: heachi-backend
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    database: h2
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create-drop
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;
+    username: SA
+    password:
+
+  data:
+    rest:
+      max-page-size: 100
+      default-page-size: 10
+    web:
+      pageable:
+        max-page-size: 100
+        default-page-size: 10
+  jackson:
+    default-property-inclusion: non-null
+  output:
+    ansi:
+      enabled: always
+ethereum:
+  url: https://tn.henesis.io/ethereum/ropsten?clientId=815fcd01324b8f75818a755a72557750
+
